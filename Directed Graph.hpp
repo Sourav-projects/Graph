@@ -35,6 +35,7 @@ class DirectedGraph : public Graph
          vector<int> getFinishTimes();
          void finishTimeHelper(int src, vector<int>& finishTimes, vector<bool>& visited);
          DirectedGraph getReversal();
+    bool detectCycle(int src, vector<int> &stack, vector<bool> &visited);
 
 };
 
@@ -104,49 +105,33 @@ DirectedGraph DirectedGraph :: getReversal()
              return gT;
 }
 
-bool DirectedGraph::isCyclic()
-{
-    int numOfNodes = getNumberOfNodes();
-    if(numOfNodes <= 1)
-       return false;
-    vector<bool> visited(numOfNodes + 1, 0);
-    vector<bool> inPath(numOfNodes + 1, 0);
-    stack<pair<int,int>> path;
-    for(int i=1; i <= numOfNodes; i++)
-    {
-        if(visited[i])
-            continue;
-        path.push({i,0});
-        visited[i] = 1;
-        inPath[i] = 1;
-        while(!path.empty())
-        {
-            int source = path.top().first;
-            int idx = path.top().second;
-            path.pop();
-            if(idx == adjacencyList[source].size())
-            {
-                inPath[idx] = 0;
-                continue;
-            }
-            else
-            {
-                int explore = adjacencyList[source][idx].first;
-                if(inPath[explore])
-                    return true;
-                if(visited[explore])
-                {
-                    path.push({source, idx + 1});
-                    continue;
-                }
-                inPath[explore] = visited[explore] = true;
-                path.push({source, idx + 1});
-                path.push({explore, 0});
-            }
+bool DirectedGraph::detectCycle(int src, vector<int> &stack, vector<bool> &visited){
+    stack[src]=true;
+    if(!visited[src]){
+        visited[src]=true;
+        for(auto neighbor:this->adjacencyList[src]){
+            if(!visited[neighbor.first]&&detectCycle(neighbor.first, stack, visited)) return true;
+            if(stack[neighbor.first]) return true;
         }
     }
+    stack[src]=false;
     return false;
 }
+
+
+bool DirectedGraph::isCyclic(){
+    bool cycle=false;
+    vector<int> stack(this->numNodes+1);
+    vector<bool> visited(this->numNodes+1);
+    for(int i=1;i<=numNodes;i++){
+        if(!visited[i]&&detectCycle(i,stack,visited)){
+            cycle=true;
+            break;
+        }
+    }
+    return cycle;
+}
+
 
 
 #endif /* Directed_Graph_hpp */
